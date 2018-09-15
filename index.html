@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        
+        <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+        <link rel="stylesheet" type="text/css" href="./index.css">
+        <link rel="stylesheet" type="text/css" href="./code.min.css">
+        <script
+            src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+        <script type="text/javascript" src="./outputLog.js"></script>
+    </head>
+    <body>
+        <h1>Demo</h1>
+        <div id="contents_sample_wrap">
+            <p>コンソールを開いてボタンを押すとサンプルログを確認できます。</p>
+            <input type="button" value="サンプルログを出す" id="log-button" />
+            <br><br><br>
+        </div>
+        <h1>How To Use</h1>
+        <ol>
+            <li>
+                <h3>outputLog.jsの読み込み（jQueryを一番上で読み込み、そのすぐ下でoutputLog.jsを読み込んでください。）</h3>
+                <pre class="prettyprint linenums">
+&lt;script src="【jQueryのsrc】"&gt;&lt;/script&gt;&lt;!-- jQueryを読み込み --&gt;
+&lt;script type="text/javascript" src="./outputLog.js"&gt;&lt;/script&gt;&lt;!-- outputLog.jsを読み込み --&gt;
+                </pre>
+            </li>
+            <li>
+                <h3>outputLog.jsの仕様</h3>
+                <span>js内に配置したconsole.log()などの内容が記録され、コンソールにも現在時刻付きでログが表示される。</span><br>
+                <span>画面右上の「ろぐ」ボタンを押下すると記録したログの一覧をテキストファイルでダウンロードできる。</span><br>
+                <br>
+                <span>★outputLog.jsの対象</span><br>
+                <ul>
+                    <li>console.log()</li>
+                    <li>console.info()</li>
+                    <li>console.warn()</li>
+                    <li>console.error()</li>
+                </ul>
+            </li>
+            <li>
+                <h3>outputLog.jsの操作</h3>
+                <span>ブラウザのコンソールから下記のコードを実行できる。</span><br>
+                <!-- <span>また、右上の「ろぐ」ボタンで記録したログをテキストファイルでダウンロードできる。</span><br> -->
+                <pre class="prettyprint linenums lang-js">
+// ライブラリを有効化する（outputLog.jsを読み込んだ時点ですでに有効化されている）
+outputLog.enable();
+
+// ライブラリを無効化する
+outputLog.disable();
+
+// 記録しているlogを消去する
+outputLog.reset();
+
+// 記録しているlogをダウンロードする（「ろぐ」ボタン押下と同義）
+outputLog.downLoad();
+                </pre>
+            </li>
+        </ol>
+    </body>
+</html>
+<script>
+    $(document).ready(function(){
+    $("#log-button").click(function(){
+        console.log("test");
+        console.log({a:1, b:{a:1}})
+        console.log("ろぐろぐ")
+        console.log(["は","い","れ","つ"])
+        console.log(window)
+        console.log("ろぐ");
+        console.info("いんふぉ");
+        console.warn("わーん");
+        console.error("えらー");
+    });
+  });
+
+</script>
