@@ -59,22 +59,26 @@ outputLog.reset();
 outputLog.downLoad();
                 </pre>
             </li>
+            <li>
+                <h3>outputLog.jsのダウンロード</h3>
+                <span>こちらからダウンロードできます。</span><br>
+                <a href="outputLog.js" download="outputLog.js">downlaod</a>
+            </li>
         </ol>
     </body>
 </html>
 <script>
     $(document).ready(function(){
-    $("#log-button").click(function(){
-        console.log("test");
-        console.log({a:1, b:{a:1}})
-        console.log("ろぐろぐ")
-        console.log(["は","い","れ","つ"])
-        console.log(window)
-        console.log("ろぐ");
-        console.info("いんふぉ");
-        console.warn("わーん");
-        console.error("えらー");
-    });
+        $("#log-button").click(function(){
+            console.log("test");
+            console.log({a:1, b:{a:1}})
+            console.log("ろぐろぐ")
+            console.log(["は","い","れ","つ"])
+            console.log(window)
+            console.log("ろぐ");
+            console.info("いんふぉ");
+            console.warn("わーん");
+            console.error("えらー");
+        });
   });
-
 </script>
