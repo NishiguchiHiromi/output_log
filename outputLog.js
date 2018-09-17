@@ -43,17 +43,13 @@ var OutputLog = (function() {
             throw new Error("DUMMY");
         } catch(e) {
             var errorLog = e.stack.split(/[\r\n]+/);
-            // originalConsoleLog(errorLog);
-            // originalConsoleLog(errorLog[2]);
-            var errorArray = errorLog
-            .filter(function(v){
+            var errorArray = errorLog.filter(function(v){
                 return /^.*   at .*:[0-9]+:[0-9]+/.test(v);
             });
             if(errorArray.length > 0){// ie/edge/chrome
                 return errorArray[3]
             }else{
-                errorArray = errorLog
-                .filter(function(v){
+                errorArray = errorLog.filter(function(v){
                     return v.startsWith("@file:");
                 });
                 if(errorArray.length > 0){// firefox
@@ -105,10 +101,7 @@ var OutputLog = (function() {
     var downLoad = function() {
         var now = new Date();
         var mimeType = 'text/plain';
-        var name     = "log^" 
-        // + now.toLocaleTimeString()
-        + now
-        + ".txt";
+        var name     = "log^" + now + ".txt";
 
         // BOMは文字化け対策
         var bom  = new Uint8Array([0xEF, 0xBB, 0xBF]);
@@ -146,10 +139,7 @@ var OutputLog = (function() {
                     button.css("z-index","2147483647")
                     button.css("top","10px")
                     button.css("right","10px")
-                    // button.css("font-size","30px")
-                    // button.width("75px")
-                    // button.height("50px")
-                    button.on("click", function(){  // 出力ボタンを押した場合は、setBlobUrl関数に値を渡して実行
+                    button.on("click", function(){
                         downLoad();
                     });
                 })
@@ -159,7 +149,7 @@ var OutputLog = (function() {
             console.warn = warn;
             console.error = error;
         } else {
-            alert('このブラウザには対応していません');
+            alert('outputLog.jsはこのブラウザには対応していません');
         }
     }
   
@@ -186,6 +176,8 @@ var OutputLog = (function() {
         result = '';
     }
     p.downLoad = downLoad;
+
+    // エラーstack解析用
     p.error = function(){
         try {
             throw new Error("DUMMY");
@@ -195,11 +187,126 @@ var OutputLog = (function() {
     }
     return OutputLog;
 })();
-var outputLog = new OutputLog();
+// var outputLog = new OutputLog();
 
+var googleDriveClient;
+getGoogleAuth().then(loadGoogleDrive).then(function(gClient){
+    googleDriveClient = gClient;
+});
 
+// google driveのクライアントの生成
+function loadGoogleDrive() {
+    var p = new Promise(function(resolve, reject) {
+        try {
+            window.gapi.client.load('drive', 'v3', fncOnDriveApiLoad);
+        } catch (e) {
+            reject(e);
+        }
+        function fncOnDriveApiLoad() {
+            resolve(window.gapi.client);
+        }
+    });
+    return p;
+}
 
+// Google認証
+function getGoogleAuth() {
+    var objAuthParam = {
+        // クライアントIDはGoogle API consoleで取得してください
+        'client_id': "286381776457-a9k7o4ol8t8omo653s9rgcah4qh406jj.apps.googleusercontent.com",
+        'scope': ['https://www.googleapis.com/auth/drive'],
+        'immediate': false
+    };
+    var p = new Promise(function(resolve, reject) {
+        window.gapi.load('auth', {
+            'callback': function () {
+                window.gapi.auth.authorize(
+                    objAuthParam,
+                    authResult);
+            }
+        });
+        function authResult(objAuthResult) {
+            if (objAuthResult && !objAuthResult.error) {
+                resolve(objAuthResult.access_token);
+            } else {
+                // auth failed.
+                reject(objAuthResult);
+            }
+        }
+    });
+    return p;
+}
 
+// ファイルアップロード
+function uploadFile(gClient, base64FileData, fileName, fileType) {
+    // 固定文
+    const boundary = '-------314159265358979323846';
+    const delimiter = '\r\n--' + boundary + '\r\n';
+    const closeDelim = '\r\n--' + boundary + '--';
+    const contentType = fileType;
+
+    // アップロード先のフォルダ指定など
+    var metadata = {
+        'name': fileName,
+        'mimeType': contentType
+    };
+    var multipartRequestBody =
+        delimiter +
+        'content-type: application/json; charset=UTF-8\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'content-transfer-encoding: base64\r\n' +
+        'content-type: ' + contentType + '\r\n\r\n' +
+        base64FileData +
+        closeDelim;
+    var request = gClient.request({
+        'path': '/upload/drive/v3/files',
+        'method': 'POST',
+        'params': {
+            'uploadType': 'multipart'
+        },
+        'headers': {
+            'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+        },
+        'body': multipartRequestBody
+    });
+    try {
+        request.execute(function (objFile) {
+            console.log(objFile);
+            console.info('upload success !');
+        });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// ドロップゾーンにドラッグしている時のイベント
+function dragOver(event) {
+    event.preventDefault();
+}
+
+// ドロップした時のイベント
+function drop(event) {
+    if (event.dataTransfer && event.dataTransfer.files instanceof FileList && event.dataTransfer.files.length > 0) {
+        // サンプルとして1ファイルのみとする
+        var file = event.dataTransfer.files[0];
+        var reader = new FileReader();
+        // バイナリファイルをbase64に変換
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+            var arraySplitBase64 = '';
+            if (typeof reader.result === 'string') {
+                // base64データのデータ本部を抽出
+                arraySplitBase64 = reader.result.split(',');
+                // file upload
+                uploadFile(googleDriveClient, arraySplitBase64[1], file.name, file.type);
+            } else {
+                throw 'read file error';
+            }
+        };
+    }
+    event.preventDefault();
+}
 
 
 
